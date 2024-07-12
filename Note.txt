@@ -1,0 +1,48 @@
+Multirole Breeze
+----------------
+1. buat file Laravel
+2. konfigurasi .env
+3. buat breeze sesuai docs -> composre require Laravel:breeze --dev
+4. install package breeze -> php artisan breeze:install
+	- select -> no (dark mode)
+	- select -> 1 or phpunit
+	- finish
+5. npm run build
+6. Melakukan register data pada web untuk ngetes apakah default user setelah melakukan register akun.
+7. Buat controller -> php artisan make:controller HomeController dan modif controller
+8. Masuk routes/web.php, kemudian buat route get -> Route::get('/admin/dashboard', [HomeController::class, 'index']);
+9. Masuk ke bagian AuthenticatedSessionController.php yang ada pada folder App\Http\Controllers\Auth.
+lalu modif pada bagian store function
+->
+  public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $request->session()->regenerate();
+
+        if ($request->user()->role === 'admin') {
+            return redirect('admin/dashboard');
+        }
+
+        return redirect()->intended(route('dashboard');
+    }
+
+10. buat middleware -> php artisan make:middleware Admin
+Lalu modif file admin seperti dibawah:
+  public function handle(Request $request, Closure $next): Response
+    {
+        if (Auth::user()->role != 'admin') {
+            return redirect('dashboard');
+        }
+        return $next($request);
+    }
+
+11. Masuk ke bootstrap/app.php untuk melakukan pembatasan hak akses.
+tambah kan code dibawah pada bagian middleware.
+ $middleware->alias([
+            'admin' => Admin::class,
+        ]);
+12. tambahkan code pada route/web.php -> 
+( code : ->middleware(['auth', 'admin']) )
+contoh :
+Route::get('/admin/dashboard', [HomeController::class, 'index'])->middleware(['auth', 'admin']);
